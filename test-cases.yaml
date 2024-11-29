@@ -1,0 +1,57 @@
+# TODO: generate this _instead_ of "params_fillable.yaml"  and then edit it
+test1:
+  name: Test 1
+  description: "Test case for smart-patrols"
+  params:
+    workflow_details:
+      name: "SMART Patrols Dashboard"
+      description: "A dashboard for visualizing patrol trajectories, patrols events, and time density."
+
+    smart_client_name:
+      data_source:
+        name: "test"
+
+    # Parameters for 'Set Groupers' using task `set_groupers`.
+    groupers:
+      groupers: # (list[ecoscope_workflows.tasks.groupby._groupby.Grouper], FieldInfo(annotation=NoneType, required=True, description='            Index(es) and/or column(s) to group by, along with\n            optional display names and help text.\n            '))
+        - temporal_index: "%B"
+
+    time_range:
+      since: "2024-01-01T00:00:00Z"
+      until: "2024-01-02T00:00:00Z" #NOTE: fails with non-full date
+
+    # Parameters for 'Get Patrol Observations from EarthRanger' using task `get_patrol_observations`.
+    patrol_obs:
+      ca_uuid: "735606d2-c34e-49c3-a45b-7496ca834e58"
+      language_uuid: "13451893-86af-4ec0-beac-2b8e0c2482b5"
+
+    # Parameters for 'Transform Relocations to Trajectories' using task `relocations_to_trajectory`.
+    patrol_traj:
+      max_length_meters: 10000 # (<class 'float'>, FieldInfo(annotation=NoneType, required=True))
+      max_time_secs: 3600 # (<class 'float'>, FieldInfo(annotation=NoneType, required=True))
+      max_speed_kmhr: 120 # (<class 'float'>, FieldInfo(annotation=NoneType, required=True))
+
+    # Parameters for 'Get Patrol Events from EarthRanger' using task `get_patrol_events`.
+    patrol_events:
+      ca_uuid: "735606d2-c34e-49c3-a45b-7496ca834e58"
+      language_uuid: "13451893-86af-4ec0-beac-2b8e0c2482b5"
+
+    # Parameters for 'Draw Time Series Bar Chart for Patrols Events' using task `draw_time_series_bar_chart`.
+    patrol_events_bar_chart:
+      time_interval: "month" # (typing.Literal['year', 'month', 'week', 'day', 'hour'], FieldInfo(annotation=NoneType, required=True, description='Sets the time interval of the x axis.'))
+
+    td:
+      pixel_size: 250
+
+  assertions:
+    result_stdout_contains:
+      - "A dashboard for visualizing patrol trajectories, patrols events, and time density."
+      - "widget_type='map', title='Trajectories & Patrol Events Map'"
+      - "widget_type='map', title='Time Density Map'"
+      - "widget_type='graph', title='Patrol Events Bar Chart'"
+      - "widget_type='graph', title='Patrol Events Pie Chart'"
+      - "widget_type='stat', title='Total Patrols'"
+      - "widget_type='stat', title='Total Time'"
+      - "widget_type='stat', title='Total Distance'"
+      - "widget_type='stat', title='Average Speed'"
+      - "widget_type='stat', title='Max Speed'"
