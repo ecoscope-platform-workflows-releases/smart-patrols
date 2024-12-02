@@ -1,0 +1,38 @@
+[dependencies]
+  curl = '*'
+  yq = '*'
+
+  [dependencies.ecoscope-workflows-core]
+    channel = 'https://repo.prefix.dev/ecoscope-workflows/'
+    version = '0.0.30'
+
+  [dependencies.ecoscope-workflows-ext-ecoscope]
+    channel = 'https://repo.prefix.dev/ecoscope-workflows/'
+    version = '0.0.30'
+
+[project]
+  channels = ['https://repo.prefix.dev/ecoscope-workflows/', 'conda-forge']
+  name = 'smart-patrols'
+  platforms = ['linux-64', 'linux-aarch64', 'osx-arm64']
+
+[tasks]
+  [tasks.compile]
+    cmd = './dev/recompile.sh --install'
+
+  [tasks.curl-invoke]
+    cmd = './dev/curl-invoke-docker.sh'
+
+  [tasks.docker-build]
+    cmd = './dev/docker-build.sh smart-patrols'
+
+  [tasks.docker-run]
+    cmd = './dev/docker-run.sh smart-patrols'
+
+  [tasks.pytest-app]
+    cmd = "./dev/pytest.sh smart-patrols 'app'"
+
+  [tasks.pytest-cli]
+    cmd = "./dev/pytest.sh smart-patrols 'cli'"
+
+  [tasks.recompile]
+    cmd = './dev/recompile.sh --update'
