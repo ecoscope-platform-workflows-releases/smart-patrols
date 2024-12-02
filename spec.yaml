@@ -1,10 +1,10 @@
 id: smart_patrols
 requirements:
   - name: ecoscope-workflows-core
-    version: "*"
+    version: 0.0.30
     channel: file:///tmp/ecoscope-workflows/release/artifacts/
   - name: ecoscope-workflows-ext-ecoscope
-    version: "*"
+    version: 0.0.30
     channel: file:///tmp/ecoscope-workflows/release/artifacts/
 workflow:
   - name: Set Workflow Details
@@ -53,11 +53,12 @@ workflow:
               "junk_status",
               "geometry",
             ]
-          filter_point_coords: [
-            {"x": 180.0, "y": 90.0},
-            {"x": 0.0, "y": 0.0},
-            {"x": 1.0, "y": 1.0},
-          ]
+          filter_point_coords:
+            [
+              { "x": 180.0, "y": 90.0 },
+              { "x": 0.0, "y": 0.0 },
+              { "x": 1.0, "y": 1.0 },
+            ]
       - name: Transform Relocations to Trajectories
         id: patrol_traj
         task: relocations_to_trajectory
