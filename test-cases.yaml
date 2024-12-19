@@ -1,6 +1,6 @@
 # TODO: generate this _instead_ of "params_fillable.yaml"  and then edit it
-test1:
-  name: Test 1
+month-grouper:
+  name: Month Grouper
   description: "Test case for smart-patrols"
   params:
     workflow_details:
