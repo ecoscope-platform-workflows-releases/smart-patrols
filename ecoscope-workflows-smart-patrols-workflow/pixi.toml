@@ -36,11 +36,11 @@ version = "*"
 channel = "https://conda.anaconda.org/conda-forge/"
 
 [dependencies.ecoscope-workflows-core]
-version = "*"
+version = "==0.0.40"
 channel = "file:///tmp/ecoscope-workflows/release/artifacts/"
 
 [dependencies.ecoscope-workflows-ext-ecoscope]
-version = "*"
+version = "==0.0.40"
 channel = "file:///tmp/ecoscope-workflows/release/artifacts/"
 
 [feature.test.dependencies.pytest]

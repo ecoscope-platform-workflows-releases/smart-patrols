@@ -1,10 +1,10 @@
 id: smart_patrols
 requirements:
   - name: ecoscope-workflows-core
-    version: "*"
+    version: 0.0.40
     channel: file:///tmp/ecoscope-workflows/release/artifacts/
   - name: ecoscope-workflows-ext-ecoscope
-    version: "*"
+    version: 0.0.40
     channel: file:///tmp/ecoscope-workflows/release/artifacts/
 workflow:
   - name: Set Workflow Details
