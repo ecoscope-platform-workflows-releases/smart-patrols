@@ -6,8 +6,9 @@ from io import TextIOWrapper
 import click
 import ruamel.yaml
 
-from .dispatch import dispatch
-from .params import Params
+from ecoscope_workflows_smart_patrols_workflow.dispatch import dispatch
+from ecoscope_workflows_smart_patrols_workflow.params import Params
+from ecoscope_workflows_smart_patrols_workflow.response import ResponseModel
 
 
 @click.command()
@@ -37,8 +38,8 @@ def main(
     params = Params(**yaml.load(config_file))
 
     result = dispatch(execution_mode, mock_io, params)
-
-    print(result)
+    response = ResponseModel(result=result.model_dump())
+    print(response.model_dump_json())
 
 
 if __name__ == "__main__":
