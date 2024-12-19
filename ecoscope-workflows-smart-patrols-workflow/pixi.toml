@@ -116,4 +116,4 @@ features = [
 solve-group = "default"
 
 [tasks]
-docker-build = "mkdir -p .tmp/ecoscope-workflows/release/artifacts/\n&& cp -r /tmp/ecoscope-workflows/release/artifacts/* .tmp/ecoscope-workflows/release/artifacts/\n&& docker buildx build -t ecoscope-workflows-smart-patrols-workflow .\n"
+docker-build = "docker buildx build -t ecoscope-workflows-patrols-workflow ."
