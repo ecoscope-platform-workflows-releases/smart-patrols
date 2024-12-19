@@ -57,14 +57,6 @@ pixi run python ecoscope_workflows_smart_patrols_workflow/cli.py \
 - `--execution-mode`: Set to `sequential` for sequential processing
 - `--no-mock-io`: Use actual I/O operations (not mocked)
 
-## Directory Structure
-
-```
-ecoscope-workflows-smart-patrols-workflow/
-├── ecoscope_workflows_smart_patrols_workflow/
-│   └── cli.py
-└── param.yaml
-```
 
 ## Support
 
