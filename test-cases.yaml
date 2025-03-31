@@ -11,8 +11,8 @@ all-grouper:
     groupers:
       groupers: []
     time_range:
-      since: "2025-01-01T00:00:00Z"
-      until: "2025-01-03T00:00:00Z"
+      since: "2021-12-20T00:00:00Z"
+      until: "2021-12-22T00:00:00Z"
     patrol_traj:
       trajectory_segment_filter:
         min_length_meters: 0.001
@@ -48,8 +48,8 @@ month-grouper:
       groupers:
         - "%B"
     time_range:
-      since: "2025-01-01T00:00:00Z"
-      until: "2025-01-03T00:00:00Z"
+      since: "2021-11-26T00:00:00Z"
+      until: "2021-12-02T00:00:00Z"
     patrol_traj:
       trajectory_segment_filter:
         min_length_meters: 0.001
@@ -84,8 +84,8 @@ value-grouper:
     groupers:
       groupers: []
     time_range:
-      since: "2025-01-01T00:00:00Z"
-      until: "2025-01-03T00:00:00Z"
+      since: "2021-12-20T00:00:00Z"
+      until: "2021-12-22T00:00:00Z"
     patrol_traj:
       trajectory_segment_filter:
         min_length_meters: 0.001
