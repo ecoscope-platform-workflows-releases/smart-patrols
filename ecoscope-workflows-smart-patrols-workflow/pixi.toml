@@ -8,11 +8,7 @@ channels = [
     "conda-forge",
     "microsoft",
 ]
-platforms = [
-    "linux-64",
-    "linux-aarch64",
-    "osx-arm64",
-]
+platforms = ["linux-64", "linux-aarch64", "osx-arm64"]
 [dependencies]
 [feature.test.dependencies]
 
@@ -36,12 +32,12 @@ version = "*"
 channel = "https://conda.anaconda.org/conda-forge/"
 
 [dependencies.ecoscope-workflows-core]
-version = "*"
-channel = "file:///tmp/ecoscope-workflows/release/artifacts/"
+channel = 'https://repo.prefix.dev/ecoscope-workflows/'
+version = '0.0.66'
 
 [dependencies.ecoscope-workflows-ext-ecoscope]
-version = "*"
-channel = "file:///tmp/ecoscope-workflows/release/artifacts/"
+channel = 'https://repo.prefix.dev/ecoscope-workflows/'
+version = '0.0.66'
 
 [feature.test.dependencies.pytest]
 version = "*"
@@ -80,36 +76,26 @@ cmd = "python -m pytest -v tests/test_metadata.py"
 
 [feature.test.tasks.test-app-async-mock-io]
 cmd = "python -m pytest -v tests/test_results.py -k 'app and async and mock-io'"
-depends-on = [
-    "playwright-install",
-]
+depends-on = ["playwright-install"]
 
 [feature.test.tasks.test-app-sequential-mock-io]
 cmd = "python -m pytest -v tests/test_results.py -k 'app and sequential and mock-io'"
-depends-on = [
-    "playwright-install",
-]
+depends-on = ["playwright-install"]
 
 [feature.test.tasks.test-cli-async-mock-io]
 cmd = "python -m pytest -v tests/test_results.py -k 'cli and async and mock-io'"
-depends-on = [
-    "playwright-install",
-]
+depends-on = ["playwright-install"]
 
 [feature.test.tasks.test-cli-sequential-mock-io]
 cmd = "python -m pytest -v tests/test_results.py -k 'cli and sequential and mock-io'"
-depends-on = [
-    "playwright-install",
-]
+depends-on = ["playwright-install"]
 
 [environments.default]
 features = []
 solve-group = "default"
 
 [environments.test]
-features = [
-    "test",
-]
+features = ["test"]
 solve-group = "default"
 
 [tasks]
