@@ -3,7 +3,7 @@
 
 FROM bitnami/minideb:bullseye AS fetch
 RUN apt-get update && apt-get install -y curl
-RUN curl -fsSL https://pixi.sh/install.sh | bash
+RUN curl -fsSL https://pixi.sh/install.sh | PIXI_VERSION=latest bash
 
 FROM bitnami/minideb:bullseye AS install
 COPY --from=fetch /root/.pixi /root/.pixi
@@ -23,9 +23,9 @@ RUN pixi install -e default --locked
 FROM install AS app
 ENV PORT 8080
 ENV CONCURRENCY 1
-ENV TIMEOUT 600
+ENV UVICORN_TIMEOUT 600
 CMD pixi run -e default \
-    uvicorn --host 0.0.0.0 --port $PORT --workers $CONCURRENCY --timeout-graceful-shutdown $TIMEOUT ecoscope_workflows_smart_patrols_workflow.app:app
+    uvicorn --host 0.0.0.0 --port $PORT --workers $CONCURRENCY --timeout-graceful-shutdown $UVICORN_TIMEOUT ecoscope_workflows_smart_patrols_workflow.app:app
 
 # FROM python:3.10-slim-buster AS unzip_proxy
 # RUN apt-get update && apt-get install -y \

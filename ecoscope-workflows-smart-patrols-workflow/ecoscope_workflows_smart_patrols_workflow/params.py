@@ -6,16 +6,15 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
 class WorkflowDetails(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    name: str = Field(..., description="The name of your workflow", title="Name")
-    description: str = Field(..., description="A description", title="Description")
-    image_url: Optional[str] = Field("", description="An image url", title="Image Url")
+    name: str = Field(..., title="Workflow Name")
+    description: Optional[str] = Field("", title="Workflow Description")
 
 
 class TimeRange(BaseModel):
@@ -24,31 +23,6 @@ class TimeRange(BaseModel):
     )
     since: AwareDatetime = Field(..., description="The start time", title="Since")
     until: AwareDatetime = Field(..., description="The end time", title="Until")
-
-
-class PatrolObs(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    ca_uuid: str = Field(..., description="Conservation Area UUID", title="Ca Uuid")
-    language_uuid: str = Field(..., description="Language UUID", title="Language Uuid")
-
-
-class PatrolTraj(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    max_length_meters: Optional[float] = Field(10000, title="Max Length Meters")
-    max_time_secs: Optional[float] = Field(3600, title="Max Time Secs")
-    max_speed_kmhr: Optional[float] = Field(120, title="Max Speed Kmhr")
-
-
-class PatrolEvents(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    ca_uuid: str = Field(..., description="Conservation Area UUID", title="Ca Uuid")
-    language_uuid: str = Field(..., description="Language UUID", title="Language Uuid")
 
 
 class TimeInterval(str, Enum):
@@ -75,18 +49,50 @@ class Td(BaseModel):
     pixel_size: Optional[float] = Field(
         250.0, description="Raster pixel size in meters.", title="Pixel Size"
     )
+    max_speed_factor: Optional[float] = Field(1.05, title="Max Speed Factor")
+    expansion_factor: Optional[float] = Field(1.3, title="Expansion Factor")
 
 
 class SMARTConnection(BaseModel):
-    name: str = Field(..., title="Connection Name")
+    name: str = Field(..., title="Data Source")
 
 
-class Grouper(BaseModel):
-    index_name: str = Field(..., title="Index Name")
+class TemporalGrouper(RootModel[str]):
+    root: str = Field(..., title="Time")
 
 
-class TemporalGrouper(BaseModel):
-    temporal_index: str = Field(..., title="Temporal Index")
+class ValueGrouper(RootModel[str]):
+    root: str = Field(..., title="Category")
+
+
+class TrajectorySegmentFilter(BaseModel):
+    min_length_meters: Optional[float] = Field(
+        0.001, description="Minimum Segment Length in Meters", title="Min Length Meters"
+    )
+    max_length_meters: Optional[float] = Field(
+        10000, description="Maximum Segment Length in Meters", title="Max Length Meters"
+    )
+    min_time_secs: Optional[float] = Field(
+        1, description="Minimum Segment Duration in Seconds", title="Min Time Secs"
+    )
+    max_time_secs: Optional[float] = Field(
+        3600, description="Maximum Segment Duration in Seconds", title="Max Time Secs"
+    )
+    min_speed_kmhr: Optional[float] = Field(
+        0.0001,
+        description="Minimum Segment Speed in Kilometers per Hour",
+        title="Min Speed Kmhr",
+    )
+    max_speed_kmhr: Optional[float] = Field(
+        120,
+        description="Maximum Segment Speed in Kilometers per Hour",
+        title="Max Speed Kmhr",
+    )
+
+
+class Coordinate(BaseModel):
+    x: float = Field(..., title="X")
+    y: float = Field(..., title="Y")
 
 
 class SmartClientName(BaseModel):
@@ -94,9 +100,7 @@ class SmartClientName(BaseModel):
         extra="forbid",
     )
     data_source: SMARTConnection = Field(
-        ...,
-        description="Select one of your configured data sources by name.",
-        title="Data Source",
+        ..., description="Select one of your configured data sources.", title=""
     )
 
 
@@ -104,10 +108,43 @@ class Groupers(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    groupers: List[Union[Grouper, TemporalGrouper]] = Field(
-        ...,
-        description="            Index(es) and/or column(s) to group by, along with\n            optional display names and help text.\n            ",
-        title="Groupers",
+    groupers: Optional[List[Union[ValueGrouper, TemporalGrouper]]] = Field(
+        None,
+        description="            Specify how the data should be grouped to create the views for your dashboard.\n            This field is optional; if left blank, all the data will appear in a single view.\n            ",
+        title=" ",
+    )
+
+
+class PatrolTraj(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    trajectory_segment_filter: Optional[TrajectorySegmentFilter] = Field(
+        default_factory=lambda: TrajectorySegmentFilter.model_validate(
+            {
+                "min_length_meters": 0.001,
+                "max_length_meters": 10000,
+                "min_time_secs": 1,
+                "max_time_secs": 3600,
+                "min_speed_kmhr": 0.0001,
+                "max_speed_kmhr": 120,
+            }
+        ),
+        description="Trajectory Segments outside these bounds will be removed",
+        title="Trajectory Segment Filter",
+    )
+
+
+class FilterPatrolEvents(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    min_x: Optional[float] = Field(-180.0, title="Min X")
+    max_x: Optional[float] = Field(180.0, title="Max X")
+    min_y: Optional[float] = Field(-90.0, title="Min Y")
+    max_y: Optional[float] = Field(90.0, title="Max Y")
+    filter_point_coords: Optional[List[Coordinate]] = Field(
+        [], title="Filter Point Coords"
     )
 
 
@@ -116,21 +153,22 @@ class Params(BaseModel):
         extra="forbid",
     )
     workflow_details: Optional[WorkflowDetails] = Field(
-        None, title="Set Workflow Details"
+        None,
+        description="Add information that will help to differentiate this workflow from another.",
+        title="Set Workflow Details",
     )
     smart_client_name: Optional[SmartClientName] = Field(
         None, title="Select Smart Connection"
     )
-    groupers: Optional[Groupers] = Field(None, title="Set Groupers")
-    time_range: Optional[TimeRange] = Field(None, title="Set Time Range Filter")
-    patrol_obs: Optional[PatrolObs] = Field(
-        None, title="Get Patrol Observations from SMART"
+    time_range: Optional[TimeRange] = Field(
+        None, description="Choose the period of time to analyze.", title="Time Range"
     )
+    groupers: Optional[Groupers] = Field(None, title="Group Data")
     patrol_traj: Optional[PatrolTraj] = Field(
         None, title="Transform Relocations to Trajectories"
     )
-    patrol_events: Optional[PatrolEvents] = Field(
-        None, title="Get Patrol Events from SMART"
+    filter_patrol_events: Optional[FilterPatrolEvents] = Field(
+        None, title="Apply Coordinate Filter"
     )
     patrol_events_bar_chart: Optional[PatrolEventsBarChart] = Field(
         None, title="Draw Time Series Bar Chart for Patrols Events"

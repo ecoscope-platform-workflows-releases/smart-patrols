@@ -4,27 +4,20 @@
       "additionalProperties": false,
       "properties": {
         "name": {
-          "title": "Name",
-          "type": "string",
-          "description": "The name of your workflow"
+          "title": "Workflow Name",
+          "type": "string"
         },
         "description": {
-          "title": "Description",
-          "type": "string",
-          "description": "A description"
-        },
-        "image_url": {
           "default": "",
-          "title": "Image Url",
-          "type": "string",
-          "description": "An image url"
+          "title": "Workflow Description",
+          "type": "string"
         }
       },
       "required": [
-        "name",
-        "description"
+        "name"
       ],
       "type": "object",
+      "description": "Add information that will help to differentiate this workflow from another.",
       "title": "Set Workflow Details"
     },
     "smart_client_name": {
@@ -32,8 +25,8 @@
       "properties": {
         "data_source": {
           "$ref": "#/$defs/SMARTConnection",
-          "title": "Data Source",
-          "description": "Select one of your configured data sources by name."
+          "title": "",
+          "description": "Select one of your configured data sources."
         }
       },
       "required": [
@@ -41,31 +34,6 @@
       ],
       "type": "object",
       "title": "Select Smart Connection"
-    },
-    "groupers": {
-      "additionalProperties": false,
-      "properties": {
-        "groupers": {
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/Grouper"
-              },
-              {
-                "$ref": "#/$defs/TemporalGrouper"
-              }
-            ]
-          },
-          "title": "Groupers",
-          "type": "array",
-          "description": "            Index(es) and/or column(s) to group by, along with\n            optional display names and help text.\n            "
-        }
-      },
-      "required": [
-        "groupers"
-      ],
-      "type": "object",
-      "title": "Set Groupers"
     },
     "time_range": {
       "additionalProperties": false,
@@ -88,50 +56,59 @@
         "until"
       ],
       "type": "object",
-      "title": "Set Time Range Filter"
+      "description": "Choose the period of time to analyze.",
+      "title": "Time Range"
     },
-    "Fetch and preprocess patrol observations": {
-      "type": "object",
-      "description": "Fetch patrol observations from SMART, preprocess them into trajectories, and add a temporal index.",
+    "groupers": {
+      "additionalProperties": false,
       "properties": {
-        "patrol_obs": {
-          "additionalProperties": false,
-          "properties": {
-            "ca_uuid": {
-              "title": "Ca Uuid",
-              "type": "string",
-              "description": "Conservation Area UUID"
-            },
-            "language_uuid": {
-              "title": "Language Uuid",
-              "type": "string",
-              "description": "Language UUID"
-            }
+        "groupers": {
+          "default": null,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ValueGrouper"
+              },
+              {
+                "$ref": "#/$defs/TemporalGrouper"
+              }
+            ],
+            "title": "Group by"
           },
-          "required": [
-            "ca_uuid",
-            "language_uuid"
-          ],
-          "type": "object",
-          "title": "Get Patrol Observations from SMART"
-        },
+          "title": " ",
+          "type": "array",
+          "description": "            Specify how the data should be grouped to create the views for your dashboard.\n            This field is optional; if left blank, all the data will appear in a single view.\n            "
+        }
+      },
+      "type": "object",
+      "required": [],
+      "title": "Group Data"
+    },
+    "Preprocess patrol observations": {
+      "type": "object",
+      "description": "Preprocess patrol observations from EarthRanger.",
+      "ecoscope:task_group": true,
+      "properties": {
         "patrol_traj": {
           "additionalProperties": false,
           "properties": {
-            "max_length_meters": {
-              "default": 10000,
-              "title": "Max Length Meters",
-              "type": "number"
-            },
-            "max_time_secs": {
-              "default": 3600,
-              "title": "Max Time Secs",
-              "type": "number"
-            },
-            "max_speed_kmhr": {
-              "default": 120,
-              "title": "Max Speed Kmhr",
-              "type": "number"
+            "trajectory_segment_filter": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/TrajectorySegmentFilter"
+                }
+              ],
+              "default": {
+                "min_length_meters": 0.001,
+                "max_length_meters": 10000,
+                "min_time_secs": 1,
+                "max_time_secs": 3600,
+                "min_speed_kmhr": 0.0001,
+                "max_speed_kmhr": 120
+              },
+              "title": "Trajectory Segment Filter",
+              "description": "Trajectory Segments outside these bounds will be removed",
+              "ecoscope:advanced": true
             }
           },
           "required": [],
@@ -141,46 +118,67 @@
       },
       "uiSchema": {
         "ui:order": [
-          "patrol_obs",
           "patrol_traj"
         ]
       }
     },
-    "Fetch and preprocess patrol events": {
+    "Preprocess patrol events": {
       "type": "object",
-      "description": "Fetch patrol events from SMART, filter them, and add a temporal index.",
+      "description": "Preprocess patrol events from EarthRanger.",
+      "ecoscope:task_group": true,
       "properties": {
-        "patrol_events": {
+        "filter_patrol_events": {
           "additionalProperties": false,
           "properties": {
-            "ca_uuid": {
-              "title": "Ca Uuid",
-              "type": "string",
-              "description": "Conservation Area UUID"
+            "min_x": {
+              "default": -180.0,
+              "title": "Min X",
+              "type": "number",
+              "ecoscope:advanced": true
             },
-            "language_uuid": {
-              "title": "Language Uuid",
-              "type": "string",
-              "description": "Language UUID"
+            "max_x": {
+              "default": 180.0,
+              "title": "Max X",
+              "type": "number",
+              "ecoscope:advanced": true
+            },
+            "min_y": {
+              "default": -90.0,
+              "title": "Min Y",
+              "type": "number",
+              "ecoscope:advanced": true
+            },
+            "max_y": {
+              "default": 90.0,
+              "title": "Max Y",
+              "type": "number",
+              "ecoscope:advanced": true
+            },
+            "filter_point_coords": {
+              "default": [],
+              "items": {
+                "$ref": "#/$defs/Coordinate"
+              },
+              "title": "Filter Point Coords",
+              "type": "array",
+              "ecoscope:advanced": true
             }
           },
-          "required": [
-            "ca_uuid",
-            "language_uuid"
-          ],
+          "required": [],
           "type": "object",
-          "title": "Get Patrol Events from SMART"
+          "title": "Apply Coordinate Filter"
         }
       },
       "uiSchema": {
         "ui:order": [
-          "patrol_events"
+          "filter_patrol_events"
         ]
       }
     },
     "Patrol events bar chart": {
       "type": "object",
       "description": "Create the patrol events bar chart.",
+      "ecoscope:task_group": true,
       "properties": {
         "patrol_events_bar_chart": {
           "additionalProperties": false,
@@ -214,6 +212,7 @@
     "Time Density Map": {
       "type": "object",
       "description": "Calculate time density from patrol trajectories and display it on a map.",
+      "ecoscope:task_group": true,
       "properties": {
         "td": {
           "additionalProperties": false,
@@ -223,6 +222,18 @@
               "title": "Pixel Size",
               "type": "number",
               "description": "Raster pixel size in meters."
+            },
+            "max_speed_factor": {
+              "default": 1.05,
+              "title": "Max Speed Factor",
+              "type": "number",
+              "ecoscope:advanced": true
+            },
+            "expansion_factor": {
+              "default": 1.3,
+              "title": "Expansion Factor",
+              "type": "number",
+              "ecoscope:advanced": true
             }
           },
           "required": [],
@@ -241,7 +252,7 @@
     "SMARTConnection": {
       "properties": {
         "name": {
-          "title": "Connection Name",
+          "title": "Data Source",
           "type": "string"
         }
       },
@@ -251,56 +262,113 @@
       "title": "SMARTConnection",
       "type": "object"
     },
-    "Grouper": {
+    "TemporalGrouper": {
+      "oneOf": [
+        {
+          "const": "%Y",
+          "title": "Year (example: 2024)"
+        },
+        {
+          "const": "%B",
+          "title": "Month (example: September)"
+        },
+        {
+          "const": "%Y-%m",
+          "title": "Year and Month (example: 2023-01)"
+        },
+        {
+          "const": "%j",
+          "title": "Day of the year as a number (example: 365)"
+        },
+        {
+          "const": "%d",
+          "title": "Day of the month as a number (example: 31)"
+        },
+        {
+          "const": "%A",
+          "title": "Day of the week (example: Sunday)"
+        },
+        {
+          "const": "%H",
+          "title": "Hour (24-hour clock) as number (example: 22)"
+        },
+        {
+          "const": "%Y-%m-%d",
+          "title": "Date (example: 2025-01-31)"
+        }
+      ],
+      "title": "Time",
+      "type": "string"
+    },
+    "ValueGrouper": {
+      "oneOf": [],
+      "title": "Category",
+      "type": "string"
+    },
+    "TrajectorySegmentFilter": {
       "properties": {
-        "index_name": {
-          "title": "Index Name",
-          "type": "string"
+        "min_length_meters": {
+          "default": 0.001,
+          "description": "Minimum Segment Length in Meters",
+          "ecoscope:advanced": true,
+          "title": "Min Length Meters",
+          "type": "number"
+        },
+        "max_length_meters": {
+          "default": 10000,
+          "description": "Maximum Segment Length in Meters",
+          "ecoscope:advanced": true,
+          "title": "Max Length Meters",
+          "type": "number"
+        },
+        "min_time_secs": {
+          "default": 1,
+          "description": "Minimum Segment Duration in Seconds",
+          "ecoscope:advanced": true,
+          "title": "Min Time Secs",
+          "type": "number"
+        },
+        "max_time_secs": {
+          "default": 3600,
+          "description": "Maximum Segment Duration in Seconds",
+          "ecoscope:advanced": true,
+          "title": "Max Time Secs",
+          "type": "number"
+        },
+        "min_speed_kmhr": {
+          "default": 0.0001,
+          "description": "Minimum Segment Speed in Kilometers per Hour",
+          "ecoscope:advanced": true,
+          "title": "Min Speed Kmhr",
+          "type": "number"
+        },
+        "max_speed_kmhr": {
+          "default": 120,
+          "description": "Maximum Segment Speed in Kilometers per Hour",
+          "ecoscope:advanced": true,
+          "title": "Max Speed Kmhr",
+          "type": "number"
         }
       },
-      "required": [
-        "index_name"
-      ],
-      "title": "Grouper",
+      "title": "TrajectorySegmentFilter",
       "type": "object"
     },
-    "TemporalGrouper": {
+    "Coordinate": {
       "properties": {
-        "temporal_index": {
-          "oneOf": [
-            {
-              "const": "%Y",
-              "title": "Year (example: 2024)"
-            },
-            {
-              "const": "%B",
-              "title": "Month (example: September)"
-            },
-            {
-              "const": "%j",
-              "title": "Day of the year as a number (example: 365)"
-            },
-            {
-              "const": "%d",
-              "title": "Day of the month as a number (example: 31)"
-            },
-            {
-              "const": "%A",
-              "title": "Day of the week (example: Sunday)"
-            },
-            {
-              "const": "%H",
-              "title": "Hour (24-hour clock) as number (example: 22)"
-            }
-          ],
-          "title": "Temporal Index",
-          "type": "string"
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
         }
       },
       "required": [
-        "temporal_index"
+        "x",
+        "y"
       ],
-      "title": "TemporalGrouper",
+      "title": "Coordinate",
       "type": "object"
     }
   },
@@ -309,10 +377,10 @@
     "ui:order": [
       "workflow_details",
       "smart_client_name",
-      "groupers",
       "time_range",
-      "Fetch and preprocess patrol observations",
-      "Fetch and preprocess patrol events",
+      "groupers",
+      "Preprocess patrol observations",
+      "Preprocess patrol events",
       "Patrol events bar chart",
       "Time Density Map"
     ]

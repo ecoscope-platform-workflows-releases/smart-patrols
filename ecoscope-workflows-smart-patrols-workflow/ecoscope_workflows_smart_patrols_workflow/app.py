@@ -23,7 +23,7 @@ from .response import ResponseModel
 app = FastAPI(
     title="smart_patrols",
     debug=True,
-    version="5f9c761",
+    version="b25b155",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -94,8 +94,8 @@ def run(
         result = dispatch(execution_mode, mock_io, params)
     except Exception as e:
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        trace = traceback.format_exc().splitlines()
-        return {"error": str(e), "traceback": trace}
+        trace = traceback.format_exc()
+        return {"error": str(e), "trace": trace}
     finally:
         for k in update_env:
             del os.environ[k]

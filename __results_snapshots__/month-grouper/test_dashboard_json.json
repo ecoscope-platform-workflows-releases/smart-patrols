@@ -28,7 +28,7 @@
     "layout": [],
     "metadata": {
       "description": "A dashboard for visualizing patrol trajectories, patrols events, and time density.",
-      "time_range": "From 01 Jan 2024 00:00:00 UTC to 02 Jan 2024 00:00:00 UTC",
+      "time_range": "From 01 Jan 2015 00:00:00 UTC to 28 Feb 2015 23:59:59 UTC",
       "title": "SMART Patrols Dashboard"
     },
     "views": {
@@ -43,14 +43,14 @@
         {
           "data": "str",
           "id": 1,
-          "is_filtered": false,
+          "is_filtered": true,
           "title": "Time Density Map",
           "widget_type": "map"
         },
         {
           "data": "str",
           "id": 2,
-          "is_filtered": false,
+          "is_filtered": true,
           "title": "Patrol Events Bar Chart",
           "widget_type": "graph"
         },
@@ -99,5 +99,5 @@
       ]
     }
   },
-  "traceback": null
+  "trace": null
 }

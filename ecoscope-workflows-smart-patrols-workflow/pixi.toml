@@ -36,11 +36,11 @@ version = "*"
 channel = "https://conda.anaconda.org/conda-forge/"
 
 [dependencies.ecoscope-workflows-core]
-version = "==0.0.40"
+version = "*"
 channel = "file:///tmp/ecoscope-workflows/release/artifacts/"
 
 [dependencies.ecoscope-workflows-ext-ecoscope]
-version = "==0.0.40"
+version = "*"
 channel = "file:///tmp/ecoscope-workflows/release/artifacts/"
 
 [feature.test.dependencies.pytest]
@@ -68,7 +68,7 @@ version = "*"
 channel = "https://conda.anaconda.org/conda-forge/"
 
 [feature.test.dependencies.playwright]
-version = "*"
+version = "<1.51.0"
 channel = "https://conda.anaconda.org/microsoft/"
 
 [feature.test.tasks]
@@ -77,9 +77,6 @@ playwright-install = "playwright install --with-deps chromium"
 
 [feature.test.tasks.test-app-metadata]
 cmd = "python -m pytest -v tests/test_metadata.py"
-depends-on = [
-    "playwright-install",
-]
 
 [feature.test.tasks.test-app-async-mock-io]
 cmd = "python -m pytest -v tests/test_results.py -k 'app and async and mock-io'"
@@ -116,4 +113,4 @@ features = [
 solve-group = "default"
 
 [tasks]
-docker-build = "docker buildx build -t ecoscope-workflows-patrols-workflow ."
+docker-build = "mkdir -p .tmp/ecoscope-workflows/release/artifacts/\n&& cp -r /tmp/ecoscope-workflows/release/artifacts/* .tmp/ecoscope-workflows/release/artifacts/\n&& docker buildx build -t ecoscope-workflows-smart-patrols-workflow .\n"
