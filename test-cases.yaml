@@ -1,0 +1,108 @@
+all-grouper:
+  name: All Grouper
+  description: A demonstration of the patrols workflow with "all" (i.e. no) grouping.
+  params:
+    workflow_details:
+      name: "SMART Patrols Dashboard"
+      description: "A dashboard for visualizing patrol trajectories, patrols events, and time density."
+    smart_client_name:
+      data_source:
+        name: "test"
+    groupers:
+      groupers: []
+    time_range:
+      since: "2025-01-01T00:00:00Z"
+      until: "2025-01-03T00:00:00Z"
+    patrol_traj:
+      trajectory_segment_filter:
+        min_length_meters: 0.001
+        max_length_meters: 10000.0
+        max_time_secs: 3600.0
+        min_time_secs: 1.0
+        max_speed_kmhr: 120.0
+        min_speed_kmhr: 0.0001
+    filter_patrol_events:
+      min_x: -180.0
+      max_x: 180.0
+      min_y: -90.0
+      max_y: 90.0
+      filter_point_coords: []
+    patrol_events_bar_chart:
+      time_interval: "month"
+    td:
+      pixel_size: 1000
+      max_speed_factor: 1.05
+      expansion_factor: 1.3
+
+month-grouper:
+  name: Month Grouper
+  description: A demonstration of the patrols workflow with monthly grouping.
+  params:
+    workflow_details:
+      name: "SMART Patrols Dashboard"
+      description: "A dashboard for visualizing patrol trajectories, patrols events, and time density."
+    smart_client_name:
+      data_source:
+        name: "test"
+    groupers:
+      groupers:
+        - "%B"
+    time_range:
+      since: "2025-01-01T00:00:00Z"
+      until: "2025-01-03T00:00:00Z"
+    patrol_traj:
+      trajectory_segment_filter:
+        min_length_meters: 0.001
+        max_length_meters: 10000.0
+        max_time_secs: 3600.0
+        min_time_secs: 1.0
+        max_speed_kmhr: 120.0
+        min_speed_kmhr: 0.0001
+    filter_patrol_events:
+      min_x: -180.0
+      max_x: 180.0
+      min_y: -90.0
+      max_y: 90.0
+      filter_point_coords: []
+    patrol_events_bar_chart:
+      time_interval: "week"
+    td:
+      pixel_size: 1000
+      max_speed_factor: 1.05
+      expansion_factor: 1.3
+
+value-grouper:
+  name: All Grouper
+  description: A demonstration of the patrols workflow with "all" (i.e. no) grouping.
+  params:
+    workflow_details:
+      name: "SMART Patrols Dashboard"
+      description: "A dashboard for visualizing patrol trajectories, patrols events, and time density."
+    smart_client_name:
+      data_source:
+        name: "test"
+    groupers:
+      groupers: []
+    time_range:
+      since: "2025-01-01T00:00:00Z"
+      until: "2025-01-03T00:00:00Z"
+    patrol_traj:
+      trajectory_segment_filter:
+        min_length_meters: 0.001
+        max_length_meters: 10000.0
+        max_time_secs: 3600.0
+        min_time_secs: 1.0
+        max_speed_kmhr: 120.0
+        min_speed_kmhr: 0.0001
+    filter_patrol_events:
+      min_x: -180.0
+      max_x: 180.0
+      min_y: -90.0
+      max_y: 90.0
+      filter_point_coords: []
+    patrol_events_bar_chart:
+      time_interval: "month"
+    td:
+      pixel_size: 1000
+      max_speed_factor: 1.05
+      expansion_factor: 1.3
