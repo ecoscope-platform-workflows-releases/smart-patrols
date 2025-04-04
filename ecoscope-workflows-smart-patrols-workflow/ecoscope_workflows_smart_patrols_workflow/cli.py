@@ -6,9 +6,9 @@ from io import TextIOWrapper
 import click
 import ruamel.yaml
 
-from ecoscope_workflows_smart_patrols_workflow.dispatch import dispatch
-from ecoscope_workflows_smart_patrols_workflow.params import Params
-from ecoscope_workflows_smart_patrols_workflow.response import ResponseModel
+from .dispatch import dispatch
+from .params import Params
+from .response import ResponseModel
 
 
 @click.command()

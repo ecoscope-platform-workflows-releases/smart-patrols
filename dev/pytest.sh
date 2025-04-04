@@ -1,12 +1,18 @@
 #!/bin/bash
 
-name=$1
+example=$1
 api=$2
 mode=$3
+flags="${@:4}"
 
-command="pixi run \
---manifest-path ecoscope-workflows-${name}-workflow/pixi.toml \
---locked --environment test \
-test-${api}-${mode}-mock-io --case test1"
+manifest_path=ecoscope-workflows-${example}-workflow/pixi.toml
+pixi_task=test-${api}-${mode}-mock-io
 
-eval $command
+# update workflow env because ecoscope-workflows-* versions may have
+# changed if `build-release` was invoked since last lockfile update
+pixi update --manifest-path $manifest_path
+
+# run the test
+pixi run --manifest-path $manifest_path --locked -e test $pixi_task \
+    --case all-grouper \
+    $flags
