@@ -967,7 +967,6 @@ patrol_events_bar_chart = (
         agg_function="count",
         color_column="event_type_colormap",
         plot_style={"xperiodalignment": "middle"},
-        grouped_styles=None,
         layout_style=None,
         **patrol_events_bar_chart_params,
     )
