@@ -4,9 +4,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel, confloat
 
 
 class WorkflowDetails(BaseModel):
@@ -48,21 +48,6 @@ class PatrolEventsBarChart(BaseModel):
     )
 
 
-class Td(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    pixel_size: Optional[float] = Field(
-        250.0, description="Raster pixel size in meters.", title="Pixel Size"
-    )
-    max_speed_factor: Optional[float] = Field(1.05, title="Max Speed Factor")
-    expansion_factor: Optional[float] = Field(1.3, title="Expansion Factor")
-
-
-class TimeDensityMap(BaseModel):
-    td: Optional[Td] = Field(None, title="Calculate Time Density from Trajectory")
-
-
 class SMARTConnection(BaseModel):
     name: str = Field(..., title="Data Source")
 
@@ -80,13 +65,15 @@ class TrajectorySegmentFilter(BaseModel):
         0.001, description="Minimum Segment Length in Meters", title="Min Length Meters"
     )
     max_length_meters: Optional[float] = Field(
-        10000, description="Maximum Segment Length in Meters", title="Max Length Meters"
+        100000,
+        description="Maximum Segment Length in Meters",
+        title="Max Length Meters",
     )
     min_time_secs: Optional[float] = Field(
         1, description="Minimum Segment Duration in Seconds", title="Min Time Secs"
     )
     max_time_secs: Optional[float] = Field(
-        57600, description="Maximum Segment Duration in Seconds", title="Max Time Secs"
+        172800, description="Maximum Segment Duration in Seconds", title="Max Time Secs"
     )
     min_speed_kmhr: Optional[float] = Field(
         0.0001,
@@ -94,7 +81,7 @@ class TrajectorySegmentFilter(BaseModel):
         title="Min Speed Kmhr",
     )
     max_speed_kmhr: Optional[float] = Field(
-        300,
+        500,
         description="Maximum Segment Speed in Kilometers per Hour",
         title="Max Speed Kmhr",
     )
@@ -103,6 +90,33 @@ class TrajectorySegmentFilter(BaseModel):
 class Coordinate(BaseModel):
     x: float = Field(..., title="X")
     y: float = Field(..., title="Y")
+
+
+class AutoScaleOrCustom(str, Enum):
+    Auto_scale = "Auto-scale"
+
+
+class AutoScaleGridCellSize(BaseModel):
+    auto_scale_or_custom: Literal["Auto-scale"] = Field(
+        "Auto-scale",
+        description="Define the resolution of the raster grid (in meters per pixel). Auto-scale for an optimized grid based on the data, or Customize to set a specific resolution.",
+        title=" ",
+    )
+
+
+class AutoScaleOrCustom1(str, Enum):
+    Customize = "Customize"
+
+
+class CustomGridCellSize(BaseModel):
+    auto_scale_or_custom: Literal["Customize"] = Field(
+        "Customize",
+        description="Define the resolution of the raster grid (in meters per pixel). Auto-scale for an optimized grid based on the data, or Customize to set a specific resolution.",
+        title=" ",
+    )
+    grid_cell_size: Optional[confloat(lt=10000.0, gt=0.0)] = Field(
+        None, description="Custom Raster Pixel Size (Meters)", title="Grid Cell Size"
+    )
 
 
 class SmartClientName(BaseModel):
@@ -133,11 +147,11 @@ class PatrolTraj(BaseModel):
         default_factory=lambda: TrajectorySegmentFilter.model_validate(
             {
                 "min_length_meters": 0.001,
-                "max_length_meters": 10000,
+                "max_length_meters": 100000,
                 "min_time_secs": 1,
-                "max_time_secs": 57600,
+                "max_time_secs": 172800,
                 "min_speed_kmhr": 0.0001,
-                "max_speed_kmhr": 300,
+                "max_speed_kmhr": 500,
             }
         ),
         description="Trajectory Segments outside these bounds will be removed",
@@ -168,6 +182,24 @@ class PreprocessPatrolEvents(BaseModel):
     filter_patrol_events: Optional[FilterPatrolEvents] = Field(
         None, title="Apply Coordinate Filter"
     )
+
+
+class Td(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    auto_scale_or_custom_cell_size: Optional[
+        Union[AutoScaleGridCellSize, CustomGridCellSize]
+    ] = Field(
+        {"auto_scale_or_custom": "Auto-scale"},
+        title="Auto Scale Or Custom Grid Cell Size",
+    )
+    max_speed_factor: Optional[float] = Field(1.05, title="Max Speed Factor")
+    expansion_factor: Optional[float] = Field(1.3, title="Expansion Factor")
+
+
+class TimeDensityMap(BaseModel):
+    td: Optional[Td] = Field(None, title="Calculate Time Density from Trajectory")
 
 
 class FormData(BaseModel):

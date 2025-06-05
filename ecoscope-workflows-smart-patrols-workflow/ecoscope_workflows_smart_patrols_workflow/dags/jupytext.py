@@ -1143,7 +1143,7 @@ patrol_events_pie_widget_grouped = (
 # parameters
 
 td_params = dict(
-    pixel_size=...,
+    auto_scale_or_custom_cell_size=...,
     max_speed_factor=...,
     expansion_factor=...,
 )
