@@ -4,12 +4,24 @@
 import json
 import os
 import sys
+from importlib.metadata import PackageNotFoundError, version
 from io import TextIOWrapper
+from pathlib import Path
+from typing import Optional
+from urllib.parse import urlparse
 
 import click
 import obstore
 import pydantic
 import ruamel.yaml
+from ecoscope_workflows_core.tracing import (
+    OTelConsoleExporterDst,
+    OtelExporterChoice,
+    attach_context,
+    configure_tracer,
+    make_otel_console_exporter_file_dst_kws,
+)
+from opentelemetry import trace
 
 from .dispatch import dispatch
 from .formdata import FormData
@@ -21,6 +33,8 @@ from .metadata import (
 )
 from .params import Params
 
+RELEASE_NAME = "ecoscope-workflows-smart-patrols-workflow"
+
 
 @click.group()
 def cli() -> None:
@@ -31,8 +45,14 @@ def cli() -> None:
 @click.option(
     "--config-file",
     type=click.File("r"),
-    required=True,
+    required=False,
     help="Configuration parameters for running the workflow.",
+)
+@click.option(
+    "--config-json",
+    type=str,
+    required=False,
+    help="JSON string of configuration parameters for running the workflow.",
 )
 @click.option(
     "--execution-mode",
@@ -45,22 +65,108 @@ def cli() -> None:
     default=False,
     help="Whether or not to mock io with 3rd party services; for testing only.",
 )
+@click.option(
+    "--otel-exporter",
+    type=click.Choice(["console", "gcp"]),
+    required=False,
+    default=None,
+    help=(
+        "OpenTelemetry exporter backend. Options: gcp (Google Cloud Trace), console (for testing/development). "
+        "Leave unset to disable export of traces."
+    ),
+)
+@click.option(
+    "--otel-console-exporter-dst",
+    type=click.Choice(["stdout", "file"]),
+    required=False,
+    default="stdout",
+    help=(
+        "Destination for console exporter output. Options: stdout or file. "
+        "If 'file' is chosen, the output file will be 'otel_traces.jsonl' in the "
+        "ECOSCOPE_WORKFLOWS_RESULTS results directory."
+    ),
+)
 def run(
-    config_file: TextIOWrapper,
+    config_file: Optional[TextIOWrapper],
+    config_json: Optional[str],
     execution_mode: str,
     mock_io: bool,
+    otel_exporter: Optional[OtelExporterChoice],
+    otel_console_exporter_dst: OTelConsoleExporterDst,
 ) -> None:
+    # Validate that exactly one of --config-file or --config-json is provided
+    if (config_file is not None and config_json is not None) or (
+        config_file is None and config_json is None
+    ):
+        raise click.UsageError(
+            "Exactly one of --config-file or --config-json must be provided."
+        )
+
+    # Load configuration based on which option is provided
+    if config_file is not None:
+        yaml = ruamel.yaml.YAML(typ="safe")
+        params = Params(**yaml.load(config_file))
+    else:  # config_json is not None
+        try:
+            config_dict = json.loads(config_json)
+            params = Params(**config_dict)
+        except json.JSONDecodeError as e:
+            raise click.BadParameter(
+                "Invalid JSON string for --config-json", param_hint="--config-json"
+            ) from e
+        except pydantic.ValidationError as e:
+            raise click.BadParameter(
+                f"Invalid configuration: {e}", param_hint="--config-json"
+            ) from e
+
+    # Rest of the function remains unchanged
     results_url = os.environ.get("ECOSCOPE_WORKFLOWS_RESULTS")
     if not results_url:
         raise ValueError("Environment variable ECOSCOPE_WORKFLOWS_RESULTS is required.")
-    yaml = ruamel.yaml.YAML(typ="safe")
-    params = Params(**yaml.load(config_file))
-    response = dispatch(execution_mode, mock_io, params)
-    result_store = obstore.store.from_url(results_url)
-    result_bytes = response.model_dump_json().encode("utf-8")
-    put_result = result_store.put("result.json", result_bytes)
-    if not put_result:
-        raise RuntimeError("Failed to put result json in result store.")
+    try:
+        _version = version(RELEASE_NAME)
+    except PackageNotFoundError:
+        _version = "unknown"
+    otel_exporter_kws: dict = {}
+    if otel_exporter == "console" and otel_console_exporter_dst == "file":
+        parsed_results_url = urlparse(results_url)
+        if parsed_results_url.scheme != "file":
+            raise ValueError(
+                "When using --otel-exporter console with --otel-console-exporter-dst file, "
+                "ECOSCOPE_WORKFLOWS_RESULTS must be a file URL (file://...)."
+            )
+        otel_exporter_kws |= make_otel_console_exporter_file_dst_kws(
+            target_dir=Path(parsed_results_url.path),
+        )
+    configure_tracer(
+        RELEASE_NAME,
+        version=_version,
+        exporter=otel_exporter,
+        exporter_kws=otel_exporter_kws,
+    )
+    if (traceparent := os.environ.get("TRACEPARENT")) is not None:
+        attach_context(traceparent, tracestate=os.environ.get("TRACESTATE"))
+    tracer = trace.get_tracer(__name__)
+    tracer_attributes = {
+        "execution_mode": execution_mode,
+        "mock_io": mock_io,
+        "config.time_range": params.time_range.model_dump_json()
+        if "time_range" in params.model_fields_set
+        else "",
+        "config.groupers": params.groupers.model_dump_json()
+        if "groupers" in params.model_fields_set
+        else "",
+        "version": _version,
+    }
+    with tracer.start_as_current_span(
+        f"{RELEASE_NAME}.cli", attributes=tracer_attributes
+    ):
+        response = dispatch(execution_mode, mock_io, params)
+        result_store = obstore.store.from_url(results_url)
+        result_bytes = response.model_dump_json().encode("utf-8")
+        put_result = result_store.put("result.json", result_bytes)
+        if not put_result:
+            raise RuntimeError("Failed to put result json in result store.")
 
 
 @cli.command()
