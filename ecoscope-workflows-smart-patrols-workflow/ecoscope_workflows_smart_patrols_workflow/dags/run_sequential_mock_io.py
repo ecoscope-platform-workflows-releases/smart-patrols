@@ -10,12 +10,15 @@ that they would not be included (or would be different) in the production versio
 import json
 import os
 import warnings  # 🧪
+
+from ecoscope_workflows_core.tasks.config import (
+    set_workflow_details as set_workflow_details,
+)
+from ecoscope_workflows_core.tasks.filter import set_time_range as set_time_range
+from ecoscope_workflows_core.tasks.io import (
+    set_smart_connection as set_smart_connection,
+)
 from ecoscope_workflows_core.testing import create_task_magicmock  # 🧪
-
-
-from ecoscope_workflows_core.tasks.config import set_workflow_details
-from ecoscope_workflows_core.tasks.io import set_smart_connection
-from ecoscope_workflows_core.tasks.filter import set_time_range
 
 get_patrol_observations_from_smart = create_task_magicmock(  # 🧪
     anchor="ecoscope_workflows_ext_ecoscope.tasks.io",  # 🧪
@@ -25,36 +28,70 @@ get_events_from_smart = create_task_magicmock(  # 🧪
     anchor="ecoscope_workflows_ext_ecoscope.tasks.io",  # 🧪
     func_name="get_events_from_smart",  # 🧪
 )  # 🧪
-from ecoscope_workflows_core.tasks.groupby import set_groupers
-from ecoscope_workflows_ext_ecoscope.tasks.preprocessing import process_relocations
+from ecoscope_workflows_core.tasks.analysis import (
+    dataframe_column_max as dataframe_column_max,
+)
+from ecoscope_workflows_core.tasks.analysis import (
+    dataframe_column_mean as dataframe_column_mean,
+)
+from ecoscope_workflows_core.tasks.analysis import (
+    dataframe_column_nunique as dataframe_column_nunique,
+)
+from ecoscope_workflows_core.tasks.analysis import (
+    dataframe_column_sum as dataframe_column_sum,
+)
+from ecoscope_workflows_core.tasks.groupby import groupbykey as groupbykey
+from ecoscope_workflows_core.tasks.groupby import set_groupers as set_groupers
+from ecoscope_workflows_core.tasks.groupby import split_groups as split_groups
+from ecoscope_workflows_core.tasks.io import persist_text as persist_text
+from ecoscope_workflows_core.tasks.results import (
+    create_map_widget_single_view as create_map_widget_single_view,
+)
+from ecoscope_workflows_core.tasks.results import (
+    create_plot_widget_single_view as create_plot_widget_single_view,
+)
+from ecoscope_workflows_core.tasks.results import (
+    create_single_value_widget_single_view as create_single_value_widget_single_view,
+)
+from ecoscope_workflows_core.tasks.results import gather_dashboard as gather_dashboard
+from ecoscope_workflows_core.tasks.results import (
+    merge_widget_views as merge_widget_views,
+)
+from ecoscope_workflows_core.tasks.transformation import (
+    add_temporal_index as add_temporal_index,
+)
+from ecoscope_workflows_core.tasks.transformation import with_unit as with_unit
+from ecoscope_workflows_ext_ecoscope.tasks.analysis import (
+    calculate_elliptical_time_density as calculate_elliptical_time_density,
+)
 from ecoscope_workflows_ext_ecoscope.tasks.preprocessing import (
-    relocations_to_trajectory,
+    process_relocations as process_relocations,
 )
-from ecoscope_workflows_core.tasks.transformation import add_temporal_index
+from ecoscope_workflows_ext_ecoscope.tasks.preprocessing import (
+    relocations_to_trajectory as relocations_to_trajectory,
+)
+from ecoscope_workflows_ext_ecoscope.tasks.results import (
+    create_point_layer as create_point_layer,
+)
+from ecoscope_workflows_ext_ecoscope.tasks.results import (
+    create_polygon_layer as create_polygon_layer,
+)
+from ecoscope_workflows_ext_ecoscope.tasks.results import (
+    create_polyline_layer as create_polyline_layer,
+)
+from ecoscope_workflows_ext_ecoscope.tasks.results import draw_ecomap as draw_ecomap
+from ecoscope_workflows_ext_ecoscope.tasks.results import (
+    draw_pie_chart as draw_pie_chart,
+)
+from ecoscope_workflows_ext_ecoscope.tasks.results import (
+    draw_time_series_bar_chart as draw_time_series_bar_chart,
+)
 from ecoscope_workflows_ext_ecoscope.tasks.transformation import (
-    apply_reloc_coord_filter,
+    apply_color_map as apply_color_map,
 )
-from ecoscope_workflows_ext_ecoscope.tasks.transformation import apply_color_map
-from ecoscope_workflows_core.tasks.groupby import split_groups
-from ecoscope_workflows_ext_ecoscope.tasks.results import create_point_layer
-from ecoscope_workflows_ext_ecoscope.tasks.results import create_polyline_layer
-from ecoscope_workflows_core.tasks.groupby import groupbykey
-from ecoscope_workflows_ext_ecoscope.tasks.results import draw_ecomap
-from ecoscope_workflows_core.tasks.io import persist_text
-from ecoscope_workflows_core.tasks.results import create_map_widget_single_view
-from ecoscope_workflows_core.tasks.results import merge_widget_views
-from ecoscope_workflows_core.tasks.analysis import dataframe_column_nunique
-from ecoscope_workflows_core.tasks.results import create_single_value_widget_single_view
-from ecoscope_workflows_core.tasks.analysis import dataframe_column_sum
-from ecoscope_workflows_core.tasks.transformation import with_unit
-from ecoscope_workflows_core.tasks.analysis import dataframe_column_mean
-from ecoscope_workflows_core.tasks.analysis import dataframe_column_max
-from ecoscope_workflows_ext_ecoscope.tasks.results import draw_time_series_bar_chart
-from ecoscope_workflows_core.tasks.results import create_plot_widget_single_view
-from ecoscope_workflows_ext_ecoscope.tasks.results import draw_pie_chart
-from ecoscope_workflows_ext_ecoscope.tasks.analysis import calculate_time_density
-from ecoscope_workflows_ext_ecoscope.tasks.results import create_polygon_layer
-from ecoscope_workflows_core.tasks.results import gather_dashboard
+from ecoscope_workflows_ext_ecoscope.tasks.transformation import (
+    apply_reloc_coord_filter as apply_reloc_coord_filter,
+)
 
 from ..params import Params
 
@@ -66,21 +103,27 @@ def main(params: Params):
 
     workflow_details = (
         set_workflow_details.validate()
-        .handle_errors(task_instance_id="workflow_details")
+        .set_task_instance_id("workflow_details")
+        .handle_errors()
+        .with_tracing()
         .partial(**(params_dict.get("workflow_details") or {}))
         .call()
     )
 
     smart_client_name = (
         set_smart_connection.validate()
-        .handle_errors(task_instance_id="smart_client_name")
+        .set_task_instance_id("smart_client_name")
+        .handle_errors()
+        .with_tracing()
         .partial(**(params_dict.get("smart_client_name") or {}))
         .call()
     )
 
     time_range = (
         set_time_range.validate()
-        .handle_errors(task_instance_id="time_range")
+        .set_task_instance_id("time_range")
+        .handle_errors()
+        .with_tracing()
         .partial(
             time_format="%d %b %Y %H:%M:%S %Z", **(params_dict.get("time_range") or {})
         )
@@ -89,7 +132,9 @@ def main(params: Params):
 
     patrol_obs = (
         get_patrol_observations_from_smart.validate()
-        .handle_errors(task_instance_id="patrol_obs")
+        .set_task_instance_id("patrol_obs")
+        .handle_errors()
+        .with_tracing()
         .partial(
             client=smart_client_name,
             time_range=time_range,
@@ -104,7 +149,9 @@ def main(params: Params):
 
     patrol_events = (
         get_events_from_smart.validate()
-        .handle_errors(task_instance_id="patrol_events")
+        .set_task_instance_id("patrol_events")
+        .handle_errors()
+        .with_tracing()
         .partial(
             client=smart_client_name,
             time_range=time_range,
@@ -117,14 +164,18 @@ def main(params: Params):
 
     groupers = (
         set_groupers.validate()
-        .handle_errors(task_instance_id="groupers")
+        .set_task_instance_id("groupers")
+        .handle_errors()
+        .with_tracing()
         .partial(**(params_dict.get("groupers") or {}))
         .call()
     )
 
     patrol_reloc = (
         process_relocations.validate()
-        .handle_errors(task_instance_id="patrol_reloc")
+        .set_task_instance_id("patrol_reloc")
+        .handle_errors()
+        .with_tracing()
         .partial(
             observations=patrol_obs,
             relocs_columns=[
@@ -149,14 +200,18 @@ def main(params: Params):
 
     patrol_traj = (
         relocations_to_trajectory.validate()
-        .handle_errors(task_instance_id="patrol_traj")
+        .set_task_instance_id("patrol_traj")
+        .handle_errors()
+        .with_tracing()
         .partial(relocations=patrol_reloc, **(params_dict.get("patrol_traj") or {}))
         .call()
     )
 
     traj_add_temporal_index = (
         add_temporal_index.validate()
-        .handle_errors(task_instance_id="traj_add_temporal_index")
+        .set_task_instance_id("traj_add_temporal_index")
+        .handle_errors()
+        .with_tracing()
         .partial(
             df=patrol_traj,
             time_col="extra__patrol_start_time",
@@ -170,7 +225,9 @@ def main(params: Params):
 
     filter_patrol_events = (
         apply_reloc_coord_filter.validate()
-        .handle_errors(task_instance_id="filter_patrol_events")
+        .set_task_instance_id("filter_patrol_events")
+        .handle_errors()
+        .with_tracing()
         .partial(
             df=patrol_events,
             roi_gdf=None,
@@ -182,7 +239,9 @@ def main(params: Params):
 
     pe_add_temporal_index = (
         add_temporal_index.validate()
-        .handle_errors(task_instance_id="pe_add_temporal_index")
+        .set_task_instance_id("pe_add_temporal_index")
+        .handle_errors()
+        .with_tracing()
         .partial(
             df=filter_patrol_events,
             time_col="time",
@@ -196,7 +255,9 @@ def main(params: Params):
 
     pe_colormap = (
         apply_color_map.validate()
-        .handle_errors(task_instance_id="pe_colormap")
+        .set_task_instance_id("pe_colormap")
+        .handle_errors()
+        .with_tracing()
         .partial(
             df=pe_add_temporal_index,
             input_column_name="event_type",
@@ -209,7 +270,9 @@ def main(params: Params):
 
     split_patrol_traj_groups = (
         split_groups.validate()
-        .handle_errors(task_instance_id="split_patrol_traj_groups")
+        .set_task_instance_id("split_patrol_traj_groups")
+        .handle_errors()
+        .with_tracing()
         .partial(
             df=traj_add_temporal_index,
             groupers=groupers,
@@ -220,7 +283,9 @@ def main(params: Params):
 
     split_pe_groups = (
         split_groups.validate()
-        .handle_errors(task_instance_id="split_pe_groups")
+        .set_task_instance_id("split_pe_groups")
+        .handle_errors()
+        .with_tracing()
         .partial(
             df=pe_colormap,
             groupers=groupers,
@@ -231,7 +296,9 @@ def main(params: Params):
 
     patrol_events_map_layers = (
         create_point_layer.validate()
-        .handle_errors(task_instance_id="patrol_events_map_layers")
+        .set_task_instance_id("patrol_events_map_layers")
+        .handle_errors()
+        .with_tracing()
         .partial(
             layer_style={"fill_color_column": "event_type_colormap"},
             legend={
@@ -246,7 +313,9 @@ def main(params: Params):
 
     patrol_traj_map_layers = (
         create_polyline_layer.validate()
-        .handle_errors(task_instance_id="patrol_traj_map_layers")
+        .set_task_instance_id("patrol_traj_map_layers")
+        .handle_errors()
+        .with_tracing()
         .partial(
             layer_style={
                 "auto_highlight": False,
@@ -267,7 +336,9 @@ def main(params: Params):
 
     combined_traj_and_pe_map_layers = (
         groupbykey.validate()
-        .handle_errors(task_instance_id="combined_traj_and_pe_map_layers")
+        .set_task_instance_id("combined_traj_and_pe_map_layers")
+        .handle_errors()
+        .with_tracing()
         .partial(
             iterables=[patrol_traj_map_layers, patrol_events_map_layers],
             **(params_dict.get("combined_traj_and_pe_map_layers") or {}),
@@ -277,7 +348,9 @@ def main(params: Params):
 
     traj_patrol_events_ecomap = (
         draw_ecomap.validate()
-        .handle_errors(task_instance_id="traj_patrol_events_ecomap")
+        .set_task_instance_id("traj_patrol_events_ecomap")
+        .handle_errors()
+        .with_tracing()
         .partial(
             tile_layers=[{"name": "TERRAIN"}, {"name": "SATELLITE", "opacity": 0.5}],
             north_arrow_style={"placement": "top-left"},
@@ -292,7 +365,9 @@ def main(params: Params):
 
     traj_pe_ecomap_html_urls = (
         persist_text.validate()
-        .handle_errors(task_instance_id="traj_pe_ecomap_html_urls")
+        .set_task_instance_id("traj_pe_ecomap_html_urls")
+        .handle_errors()
+        .with_tracing()
         .partial(
             root_path=os.environ["ECOSCOPE_WORKFLOWS_RESULTS"],
             **(params_dict.get("traj_pe_ecomap_html_urls") or {}),
@@ -302,7 +377,9 @@ def main(params: Params):
 
     traj_pe_map_widgets_single_views = (
         create_map_widget_single_view.validate()
-        .handle_errors(task_instance_id="traj_pe_map_widgets_single_views")
+        .set_task_instance_id("traj_pe_map_widgets_single_views")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Trajectories & Patrol Events Map",
             **(params_dict.get("traj_pe_map_widgets_single_views") or {}),
@@ -312,7 +389,9 @@ def main(params: Params):
 
     traj_pe_grouped_map_widget = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="traj_pe_grouped_map_widget")
+        .set_task_instance_id("traj_pe_grouped_map_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=traj_pe_map_widgets_single_views,
             **(params_dict.get("traj_pe_grouped_map_widget") or {}),
@@ -322,7 +401,9 @@ def main(params: Params):
 
     total_patrols = (
         dataframe_column_nunique.validate()
-        .handle_errors(task_instance_id="total_patrols")
+        .set_task_instance_id("total_patrols")
+        .handle_errors()
+        .with_tracing()
         .partial(
             column_name="extra__patrol_id", **(params_dict.get("total_patrols") or {})
         )
@@ -331,7 +412,9 @@ def main(params: Params):
 
     total_patrols_sv_widgets = (
         create_single_value_widget_single_view.validate()
-        .handle_errors(task_instance_id="total_patrols_sv_widgets")
+        .set_task_instance_id("total_patrols_sv_widgets")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Total Patrols",
             decimal_places=1,
@@ -342,7 +425,9 @@ def main(params: Params):
 
     total_patrols_grouped_sv_widget = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="total_patrols_grouped_sv_widget")
+        .set_task_instance_id("total_patrols_grouped_sv_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=total_patrols_sv_widgets,
             **(params_dict.get("total_patrols_grouped_sv_widget") or {}),
@@ -352,7 +437,9 @@ def main(params: Params):
 
     total_patrol_time = (
         dataframe_column_sum.validate()
-        .handle_errors(task_instance_id="total_patrol_time")
+        .set_task_instance_id("total_patrol_time")
+        .handle_errors()
+        .with_tracing()
         .partial(
             column_name="timespan_seconds",
             **(params_dict.get("total_patrol_time") or {}),
@@ -362,7 +449,9 @@ def main(params: Params):
 
     total_patrol_time_converted = (
         with_unit.validate()
-        .handle_errors(task_instance_id="total_patrol_time_converted")
+        .set_task_instance_id("total_patrol_time_converted")
+        .handle_errors()
+        .with_tracing()
         .partial(
             original_unit="s",
             new_unit="h",
@@ -373,7 +462,9 @@ def main(params: Params):
 
     total_patrol_time_sv_widgets = (
         create_single_value_widget_single_view.validate()
-        .handle_errors(task_instance_id="total_patrol_time_sv_widgets")
+        .set_task_instance_id("total_patrol_time_sv_widgets")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Total Time",
             decimal_places=1,
@@ -384,7 +475,9 @@ def main(params: Params):
 
     patrol_time_grouped_widget = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="patrol_time_grouped_widget")
+        .set_task_instance_id("patrol_time_grouped_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=total_patrol_time_sv_widgets,
             **(params_dict.get("patrol_time_grouped_widget") or {}),
@@ -394,7 +487,9 @@ def main(params: Params):
 
     total_patrol_dist = (
         dataframe_column_sum.validate()
-        .handle_errors(task_instance_id="total_patrol_dist")
+        .set_task_instance_id("total_patrol_dist")
+        .handle_errors()
+        .with_tracing()
         .partial(
             column_name="dist_meters", **(params_dict.get("total_patrol_dist") or {})
         )
@@ -403,7 +498,9 @@ def main(params: Params):
 
     total_patrol_dist_converted = (
         with_unit.validate()
-        .handle_errors(task_instance_id="total_patrol_dist_converted")
+        .set_task_instance_id("total_patrol_dist_converted")
+        .handle_errors()
+        .with_tracing()
         .partial(
             original_unit="m",
             new_unit="km",
@@ -414,7 +511,9 @@ def main(params: Params):
 
     total_patrol_dist_sv_widgets = (
         create_single_value_widget_single_view.validate()
-        .handle_errors(task_instance_id="total_patrol_dist_sv_widgets")
+        .set_task_instance_id("total_patrol_dist_sv_widgets")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Total Distance",
             decimal_places=1,
@@ -425,7 +524,9 @@ def main(params: Params):
 
     patrol_dist_grouped_widget = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="patrol_dist_grouped_widget")
+        .set_task_instance_id("patrol_dist_grouped_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=total_patrol_dist_sv_widgets,
             **(params_dict.get("patrol_dist_grouped_widget") or {}),
@@ -435,14 +536,18 @@ def main(params: Params):
 
     avg_speed = (
         dataframe_column_mean.validate()
-        .handle_errors(task_instance_id="avg_speed")
+        .set_task_instance_id("avg_speed")
+        .handle_errors()
+        .with_tracing()
         .partial(column_name="speed_kmhr", **(params_dict.get("avg_speed") or {}))
         .mapvalues(argnames=["df"], argvalues=split_patrol_traj_groups)
     )
 
     average_speed_converted = (
         with_unit.validate()
-        .handle_errors(task_instance_id="average_speed_converted")
+        .set_task_instance_id("average_speed_converted")
+        .handle_errors()
+        .with_tracing()
         .partial(
             original_unit="km/h",
             new_unit="km/h",
@@ -453,7 +558,9 @@ def main(params: Params):
 
     avg_speed_sv_widgets = (
         create_single_value_widget_single_view.validate()
-        .handle_errors(task_instance_id="avg_speed_sv_widgets")
+        .set_task_instance_id("avg_speed_sv_widgets")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Average Speed",
             decimal_places=1,
@@ -464,7 +571,9 @@ def main(params: Params):
 
     avg_speed_grouped_widget = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="avg_speed_grouped_widget")
+        .set_task_instance_id("avg_speed_grouped_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=avg_speed_sv_widgets,
             **(params_dict.get("avg_speed_grouped_widget") or {}),
@@ -474,14 +583,18 @@ def main(params: Params):
 
     max_speed = (
         dataframe_column_max.validate()
-        .handle_errors(task_instance_id="max_speed")
+        .set_task_instance_id("max_speed")
+        .handle_errors()
+        .with_tracing()
         .partial(column_name="speed_kmhr", **(params_dict.get("max_speed") or {}))
         .mapvalues(argnames=["df"], argvalues=split_patrol_traj_groups)
     )
 
     max_speed_converted = (
         with_unit.validate()
-        .handle_errors(task_instance_id="max_speed_converted")
+        .set_task_instance_id("max_speed_converted")
+        .handle_errors()
+        .with_tracing()
         .partial(
             original_unit="km/h",
             new_unit="km/h",
@@ -492,7 +605,9 @@ def main(params: Params):
 
     max_speed_sv_widgets = (
         create_single_value_widget_single_view.validate()
-        .handle_errors(task_instance_id="max_speed_sv_widgets")
+        .set_task_instance_id("max_speed_sv_widgets")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Max Speed",
             decimal_places=1,
@@ -503,7 +618,9 @@ def main(params: Params):
 
     max_speed_grouped_widget = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="max_speed_grouped_widget")
+        .set_task_instance_id("max_speed_grouped_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=max_speed_sv_widgets,
             **(params_dict.get("max_speed_grouped_widget") or {}),
@@ -513,7 +630,9 @@ def main(params: Params):
 
     patrol_events_bar_chart = (
         draw_time_series_bar_chart.validate()
-        .handle_errors(task_instance_id="patrol_events_bar_chart")
+        .set_task_instance_id("patrol_events_bar_chart")
+        .handle_errors()
+        .with_tracing()
         .partial(
             x_axis="time",
             y_axis="event_type",
@@ -529,7 +648,9 @@ def main(params: Params):
 
     patrol_events_bar_chart_html_url = (
         persist_text.validate()
-        .handle_errors(task_instance_id="patrol_events_bar_chart_html_url")
+        .set_task_instance_id("patrol_events_bar_chart_html_url")
+        .handle_errors()
+        .with_tracing()
         .partial(
             root_path=os.environ["ECOSCOPE_WORKFLOWS_RESULTS"],
             **(params_dict.get("patrol_events_bar_chart_html_url") or {}),
@@ -539,7 +660,9 @@ def main(params: Params):
 
     patrol_events_bar_chart_widget = (
         create_plot_widget_single_view.validate()
-        .handle_errors(task_instance_id="patrol_events_bar_chart_widget")
+        .set_task_instance_id("patrol_events_bar_chart_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Patrol Events Bar Chart",
             **(params_dict.get("patrol_events_bar_chart_widget") or {}),
@@ -549,7 +672,9 @@ def main(params: Params):
 
     grouped_bar_plot_widget_merge = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="grouped_bar_plot_widget_merge")
+        .set_task_instance_id("grouped_bar_plot_widget_merge")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=patrol_events_bar_chart_widget,
             **(params_dict.get("grouped_bar_plot_widget_merge") or {}),
@@ -559,7 +684,9 @@ def main(params: Params):
 
     patrol_events_pie_chart = (
         draw_pie_chart.validate()
-        .handle_errors(task_instance_id="patrol_events_pie_chart")
+        .set_task_instance_id("patrol_events_pie_chart")
+        .handle_errors()
+        .with_tracing()
         .partial(
             value_column="event_type",
             plot_style={"textinfo": "value"},
@@ -573,7 +700,9 @@ def main(params: Params):
 
     pe_pie_chart_html_urls = (
         persist_text.validate()
-        .handle_errors(task_instance_id="pe_pie_chart_html_urls")
+        .set_task_instance_id("pe_pie_chart_html_urls")
+        .handle_errors()
+        .with_tracing()
         .partial(
             root_path=os.environ["ECOSCOPE_WORKFLOWS_RESULTS"],
             **(params_dict.get("pe_pie_chart_html_urls") or {}),
@@ -583,7 +712,9 @@ def main(params: Params):
 
     patrol_events_pie_chart_widgets = (
         create_plot_widget_single_view.validate()
-        .handle_errors(task_instance_id="patrol_events_pie_chart_widgets")
+        .set_task_instance_id("patrol_events_pie_chart_widgets")
+        .handle_errors()
+        .with_tracing()
         .partial(
             title="Patrol Events Pie Chart",
             **(params_dict.get("patrol_events_pie_chart_widgets") or {}),
@@ -593,7 +724,9 @@ def main(params: Params):
 
     patrol_events_pie_widget_grouped = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="patrol_events_pie_widget_grouped")
+        .set_task_instance_id("patrol_events_pie_widget_grouped")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=patrol_events_pie_chart_widgets,
             **(params_dict.get("patrol_events_pie_widget_grouped") or {}),
@@ -602,8 +735,10 @@ def main(params: Params):
     )
 
     td = (
-        calculate_time_density.validate()
-        .handle_errors(task_instance_id="td")
+        calculate_elliptical_time_density.validate()
+        .set_task_instance_id("td")
+        .handle_errors()
+        .with_tracing()
         .partial(
             crs="ESRI:53042",
             percentiles=[50.0, 60.0, 70.0, 80.0, 90.0, 95.0, 99.999],
@@ -616,7 +751,9 @@ def main(params: Params):
 
     td_colormap = (
         apply_color_map.validate()
-        .handle_errors(task_instance_id="td_colormap")
+        .set_task_instance_id("td_colormap")
+        .handle_errors()
+        .with_tracing()
         .partial(
             df=td,
             input_column_name="percentile",
@@ -629,7 +766,9 @@ def main(params: Params):
 
     td_map_layer = (
         create_polygon_layer.validate()
-        .handle_errors(task_instance_id="td_map_layer")
+        .set_task_instance_id("td_map_layer")
+        .handle_errors()
+        .with_tracing()
         .partial(
             layer_style={
                 "fill_color_column": "percentile_colormap",
@@ -648,7 +787,9 @@ def main(params: Params):
 
     td_ecomap = (
         draw_ecomap.validate()
-        .handle_errors(task_instance_id="td_ecomap")
+        .set_task_instance_id("td_ecomap")
+        .handle_errors()
+        .with_tracing()
         .partial(
             tile_layers=[{"name": "TERRAIN"}, {"name": "SATELLITE", "opacity": 0.5}],
             north_arrow_style={"placement": "top-left"},
@@ -663,7 +804,9 @@ def main(params: Params):
 
     td_ecomap_html_url = (
         persist_text.validate()
-        .handle_errors(task_instance_id="td_ecomap_html_url")
+        .set_task_instance_id("td_ecomap_html_url")
+        .handle_errors()
+        .with_tracing()
         .partial(
             root_path=os.environ["ECOSCOPE_WORKFLOWS_RESULTS"],
             **(params_dict.get("td_ecomap_html_url") or {}),
@@ -673,14 +816,18 @@ def main(params: Params):
 
     td_map_widget = (
         create_map_widget_single_view.validate()
-        .handle_errors(task_instance_id="td_map_widget")
+        .set_task_instance_id("td_map_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(title="Time Density Map", **(params_dict.get("td_map_widget") or {}))
         .map(argnames=["view", "data"], argvalues=td_ecomap_html_url)
     )
 
     td_grouped_map_widget = (
         merge_widget_views.validate()
-        .handle_errors(task_instance_id="td_grouped_map_widget")
+        .set_task_instance_id("td_grouped_map_widget")
+        .handle_errors()
+        .with_tracing()
         .partial(
             widgets=td_map_widget, **(params_dict.get("td_grouped_map_widget") or {})
         )
@@ -689,7 +836,9 @@ def main(params: Params):
 
     patrol_dashboard = (
         gather_dashboard.validate()
-        .handle_errors(task_instance_id="patrol_dashboard")
+        .set_task_instance_id("patrol_dashboard")
+        .handle_errors()
+        .with_tracing()
         .partial(
             details=workflow_details,
             widgets=[
