@@ -68,6 +68,48 @@
       "description": "Choose the period of time to analyze.",
       "title": "Time Range"
     },
+    "patrol_obs": {
+      "additionalProperties": false,
+      "properties": {
+        "ca_uuid": {
+          "title": "Conservation Area UUID",
+          "type": "string",
+          "description": "Conservation Area UUID"
+        },
+        "language_uuid": {
+          "title": "Language UUID",
+          "type": "string",
+          "description": "Language UUID"
+        }
+      },
+      "required": [
+        "ca_uuid",
+        "language_uuid"
+      ],
+      "type": "object",
+      "title": "Patrol Observations"
+    },
+    "patrol_events": {
+      "additionalProperties": false,
+      "properties": {
+        "ca_uuid": {
+          "title": "Conservation Area UUID",
+          "type": "string",
+          "description": "Conservation Area UUID"
+        },
+        "language_uuid": {
+          "title": "Language UUID",
+          "type": "string",
+          "description": "Language UUID"
+        }
+      },
+      "required": [
+        "ca_uuid",
+        "language_uuid"
+      ],
+      "type": "object",
+      "title": "Patrol Events"
+    },
     "groupers": {
       "additionalProperties": false,
       "properties": {
@@ -466,6 +508,18 @@
         "timezone"
       ]
     },
+    "patrol_obs": {
+      "ui:order": [
+        "ca_uuid",
+        "language_uuid"
+      ]
+    },
+    "patrol_events": {
+      "ui:order": [
+        "ca_uuid",
+        "language_uuid"
+      ]
+    },
     "filter_patrol_events": {
       "ui:order": [
         "bounding_box",
@@ -484,6 +538,8 @@
       "workflow_details",
       "smart_client_name",
       "time_range",
+      "patrol_obs",
+      "patrol_events",
       "groupers",
       "patrol_traj",
       "filter_patrol_events",
