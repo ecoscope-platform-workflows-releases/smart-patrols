@@ -169,7 +169,10 @@ time_range = (
 # %%
 # parameters
 
-patrol_obs_params = dict()
+patrol_obs_params = dict(
+    ca_uuid=...,
+    language_uuid=...,
+)
 
 # %%
 # call the task
@@ -182,8 +185,6 @@ patrol_obs = (
     .partial(
         client=smart_client_name,
         time_range=time_range,
-        ca_uuid="735606d2-c34e-49c3-a45b-7496ca834e58",
-        language_uuid="13451893-86af-4ec0-beac-2b8e0c2482b5",
         patrol_mandate=None,
         patrol_transport=None,
         **patrol_obs_params,
@@ -198,7 +199,10 @@ patrol_obs = (
 # %%
 # parameters
 
-patrol_events_params = dict()
+patrol_events_params = dict(
+    ca_uuid=...,
+    language_uuid=...,
+)
 
 # %%
 # call the task
@@ -208,13 +212,7 @@ patrol_events = (
     get_events_from_smart.set_task_instance_id("patrol_events")
     .handle_errors()
     .with_tracing()
-    .partial(
-        client=smart_client_name,
-        time_range=time_range,
-        ca_uuid="735606d2-c34e-49c3-a45b-7496ca834e58",
-        language_uuid="13451893-86af-4ec0-beac-2b8e0c2482b5",
-        **patrol_events_params,
-    )
+    .partial(client=smart_client_name, time_range=time_range, **patrol_events_params)
     .call()
 )
 

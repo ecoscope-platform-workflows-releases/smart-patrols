@@ -17,6 +17,26 @@ class WorkflowDetails(BaseModel):
     description: str | None = Field("", title="Workflow Description")
 
 
+class PatrolObs(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    ca_uuid: str = Field(
+        ..., description="Conservation Area UUID", title="Conservation Area UUID"
+    )
+    language_uuid: str = Field(..., description="Language UUID", title="Language UUID")
+
+
+class PatrolEvents(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    ca_uuid: str = Field(
+        ..., description="Conservation Area UUID", title="Conservation Area UUID"
+    )
+    language_uuid: str = Field(..., description="Language UUID", title="Language UUID")
+
+
 class TimeInterval(str, Enum):
     year = "year"
     month = "month"
@@ -229,6 +249,8 @@ class Params(BaseModel):
     time_range: TimeRange | None = Field(
         None, description="Choose the period of time to analyze.", title="Time Range"
     )
+    patrol_obs: PatrolObs | None = Field(None, title="Patrol Observations")
+    patrol_events: PatrolEvents | None = Field(None, title="Patrol Events")
     groupers: Groupers | None = Field(None, title="Group Data")
     patrol_traj: PatrolTraj | None = Field(
         None, title="Transform Relocations to Trajectories"

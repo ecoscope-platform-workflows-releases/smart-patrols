@@ -1,10 +1,10 @@
 id: smart_patrols
 requirements:
   - name: ecoscope-workflows-core
-    version: 0.22.1
+    version: 0.22.6
     channel: https://repo.prefix.dev/ecoscope-workflows/
   - name: ecoscope-workflows-ext-ecoscope
-    version: 0.22.1
+    version: 0.22.6
     channel: https://repo.prefix.dev/ecoscope-workflows/
 
 workflow:
@@ -32,8 +32,6 @@ workflow:
         partial:
           client: ${{ workflow.smart_client_name.return }}
           time_range: ${{ workflow.time_range.return }}
-          ca_uuid: "735606d2-c34e-49c3-a45b-7496ca834e58"
-          language_uuid: "13451893-86af-4ec0-beac-2b8e0c2482b5"
           patrol_mandate: null
           patrol_transport: null
       - name: Patrol Events
@@ -42,8 +40,6 @@ workflow:
         partial:
           client: ${{ workflow.smart_client_name.return }}
           time_range: ${{ workflow.time_range.return }}
-          ca_uuid: "735606d2-c34e-49c3-a45b-7496ca834e58"
-          language_uuid: "13451893-86af-4ec0-beac-2b8e0c2482b5"
 
   # set 'global' groupers
   - name: Group Data
